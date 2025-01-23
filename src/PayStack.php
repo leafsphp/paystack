@@ -5,8 +5,6 @@ namespace Leaf\Billing;
 use Leaf\Billing;
 use Leaf\Billing\PayStack\Provider;
 
-require __DIR__ . '/Billing.php';
-
 /**
  * Leaf Billing PayStack
  * -----------
