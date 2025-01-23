@@ -40,14 +40,6 @@ class Plan
         $this->updatedAt = $plan['updatedAt'];
     }
 
-    /**
-     * Save current plan to paystack
-     */
-    public function save()
-    {
-        // Save plan to paystack
-    }
-
     public function toArray()
     {
         return [

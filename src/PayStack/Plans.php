@@ -56,6 +56,20 @@ class Plans
         return new Plan($plan['data']);
     }
 
+    /**
+     * Update a paystack plan
+     */
+    public function update($id, array $params): Plan
+    {
+        $response = $this->client->put("/plan/$id", [
+            'body' => json_encode($params)
+        ]);
+
+        $plan = json_decode($response->getBody(), true);
+
+        return new Plan($plan['data']);
+    }
+
     public function toArray()
     {
         return array_map(function ($plan) {

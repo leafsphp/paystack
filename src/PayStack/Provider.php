@@ -41,4 +41,28 @@ class Provider
     {
         return new Plans($this->client);
     }
+
+    /**
+     * Return paystack subscriptions instance
+     */
+    public function subscriptions()
+    {
+        return new Subscriptions($this->client);
+    }
+
+    /**
+     * Return paystack customers instance
+     */
+    public function customers()
+    {
+        return new Customers($this->client);
+    }
+
+    /**
+     * Return paystack transactions instance
+     */
+    public function transactions()
+    {
+        return new Transactions($this->client);
+    }
 }

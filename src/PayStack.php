@@ -27,18 +27,10 @@ class PayStack
     protected function initProvider($billingSettings = [])
     {
         if ($billingSettings['provider']) {
-            $config = [
-                'api_key' => $billingSettings['secrets.apiKey'],
-            ];
+            $this->provider = new Provider($billingSettings);
 
-            if (isset($billingSettings['secrets.clientId'])) {
-                $config['client_id'] = $billingSettings['secrets.clientId'];
-            }
-
-            $this->provider = new Provider($config);
-
-            if (storage()->exists(StoragePath('billing/provider.json'))) {
-                $provider = storage()->read(StoragePath('billing/provider.json'));
+            if (storage()->exists(StoragePath('billing/paystack.json'))) {
+                $provider = storage()->read(StoragePath('billing/paystack.json'));
                 $provider = json_decode($provider, true);
 
                 $this->product = $provider['product'];
@@ -49,7 +41,7 @@ class PayStack
 
                 $this->initTiers($billingSettings);
 
-                storage()->createFile(StoragePath('billing/provider.json'), json_encode([
+                storage()->createFile(StoragePath('billing/paystack.json'), json_encode([
                     'product' => $this->product,
                     'tiers' => $this->tiers,
                 ]), ['recursive' => true]);
@@ -65,13 +57,9 @@ class PayStack
             $plan = [
                 'name' => $tier['name'],
                 'description' => $tier['description'],
-                'currency' => $billingSettings['currency.name'],
+                'currency' => strtoupper($billingSettings['currency.name']),
                 'send_invoices' => $tier['send_invoices'] ?? false,
                 'send_sms' => $tier['send_sms'] ?? false,
-                'metadata' => [
-                    'tier' => $tier['name'],
-                    'nickname' => $tier['name'],
-                ],
             ];
 
             if ($tier['price'] ?? null) {
@@ -79,44 +67,85 @@ class PayStack
                 //     'amount' => $tier['price'] * 100,
                 // ]));
 
-                // $this->tiers[$payStackPlan->id] = (new Tier($payStackPlan->id, $tier))->toArray();
+                // $this->tiers[$payStackPlan->plan_code] = (new Tier($payStackPlan->plan_code, $tier))->toArray();
             } else {
                 if ($tier['price.daily'] ?? null) {
                     $payStackPlan = $this->provider->plans()->create(array_merge($plan, [
+                        'name' => $plan['name'] . ' (Daily)',
                         'amount' => $tier['price.daily'] * 100,
                         'interval' => 'daily',
                     ]));
 
-                    $this->tiers[$payStackPlan->id] = (new Tier($payStackPlan->id, array_merge($tier, ['type' => 'daily'])))->toArray();
+                    $this->tiers[$payStackPlan->plan_code] = (new Tier($payStackPlan->plan_code, array_merge($tier, ['type' => 'daily'])))->toArray();
                 }
 
                 if ($tier['price.weekly'] ?? null) {
                     $payStackPlan = $this->provider->plans()->create(array_merge($plan, [
+                        'name' => $plan['name'] . ' (Weekly)',
                         'amount' => $tier['price.weekly'] * 100,
                         'interval' => 'weekly',
                     ]));
 
-                    $this->tiers[$payStackPlan->id] = (new Tier($payStackPlan->id, array_merge($tier, ['type' => 'weekly'])))->toArray();
+                    $this->tiers[$payStackPlan->plan_code] = (new Tier($payStackPlan->plan_code, array_merge($tier, ['type' => 'weekly'])))->toArray();
                 }
 
                 if ($tier['price.monthly'] ?? null) {
                     $payStackPlan = $this->provider->plans()->create(array_merge($plan, [
+                        'name' => $plan['name'] . ' (Monthly)',
                         'amount' => $tier['price.monthly'] * 100,
-                        'interval' => 'month',
+                        'interval' => 'monthly',
                     ]));
 
-                    $this->tiers[$payStackPlan->id] = (new Tier($payStackPlan->id, array_merge($tier, ['type' => 'monthly'])))->toArray();
+                    $this->tiers[$payStackPlan->plan_code] = (new Tier($payStackPlan->plan_code, array_merge($tier, ['type' => 'monthly'])))->toArray();
                 }
 
                 if ($tier['price.yearly'] ?? null) {
                     $payStackPlan = $this->provider->plans()->create(array_merge($plan, [
+                        'name' => $plan['name'] . ' (Yearly)',
                         'amount' => $tier['price.yearly'] * 100,
-                        'interval' => 'year',
+                        'interval' => 'annually',
                     ]));
 
-                    $this->tiers[$payStackPlan->id] = (new Tier($payStackPlan->id, array_merge($tier, ['type' => 'yearly'])))->toArray();
+                    $this->tiers[$payStackPlan->plan_code] = (new Tier($payStackPlan->plan_code, array_merge($tier, ['type' => 'yearly'])))->toArray();
                 }
             }
         }
+    }
+
+    /**
+     * Open payment link for item
+     */
+    public function link($item, $user)
+    {
+        $transaction = $this->provider->transactions()->create([
+            'plan' => $item,
+            'email' => $user?->email,
+            'amount' => $this->tiers[$item]['price'] * 100,
+            'metadata' => [
+                'name' => $user?->name,
+                'user_id' => $user?->id,
+            ],
+        ]);
+
+        return $transaction->authorization_url;
+    }
+
+    public function createSubscription()
+    {
+        // /**
+        //  * @var \Leaf\Billing\PayStack\Customer
+        //  */
+        // $customer = $this->provider->customers()->create([
+        //     'email' => $user->email,
+        //     'metadata' => [
+        //         'name' => $user->name,
+        //         'user_id' => $user->id,
+        //     ],
+        // ]);
+
+        // $subscription = $this->provider->subscriptions()->create([
+        //     'customer' => $customer->id,
+        //     'plan' => $item,
+        // ]);
     }
 }
