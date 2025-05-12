@@ -70,6 +70,18 @@ class Subscriptions
         return new Subscription($subscription['data']);
     }
 
+    /**
+     * Cancel a paystack subscription
+     */
+    public function cancel($id): bool
+    {
+        $response = $this->client->post("/subscription/$id/disable");
+
+        $subscription = json_decode($response->getBody(), true);
+
+        return $subscription['status'];
+    }
+
     public function toArray()
     {
         return array_map(function ($subscription) {

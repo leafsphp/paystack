@@ -35,21 +35,33 @@ class Transactions
      */
     public function all(): array
     {
-        $response = $this->client->get('/customer');
+        $response = $this->client->get('/transaction');
 
         $transactions = json_decode($response->getBody(), true);
 
-        return array_map(function ($customer) {
-            return new Transaction($customer);
+        return array_map(function ($transaction) {
+            return new Transaction($transaction);
         }, $transactions['data']);
     }
 
     /**
-     * Get a paystack customer by id
+     * Get a paystack transaction by id
      */
     public function get($id): Transaction
     {
-        $response = $this->client->get("/customer/$id");
+        $response = $this->client->get("/transaction/$id");
+
+        $transaction = json_decode($response->getBody(), true);
+
+        return new Transaction($transaction['data']);
+    }
+
+    /**
+     * Get a paystack transaction by reference
+     */
+    public function getByReference($reference): Transaction
+    {
+        $response = $this->client->get("/transaction/verify/$reference");
 
         $transaction = json_decode($response->getBody(), true);
 
@@ -61,7 +73,7 @@ class Transactions
      */
     public function update($id, array $params): Transaction
     {
-        $response = $this->client->put("/customer/$id", [
+        $response = $this->client->put("/transaction/$id", [
             'body' => json_encode($params)
         ]);
 
@@ -72,8 +84,8 @@ class Transactions
 
     public function toArray()
     {
-        return array_map(function ($customer) {
-            return $customer->toArray();
+        return array_map(function ($transaction) {
+            return $transaction->toArray();
         }, $this->all());
     }
 }
