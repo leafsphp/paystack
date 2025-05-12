@@ -216,17 +216,6 @@ class PayStack implements BillingProvider
      */
     public function charge(array $data): Session
     {
-        $line_items = $data['items'] ?? array_map(function ($item) use ($data) {
-            return [
-                'price_data' => [
-                    'currency' => $item['currency'] ?? $data['currency'],
-                    'product_data' => ['name' => $item['item']],
-                    'unit_amount' => $item['amount'],
-                ],
-                'quantity' => $item['quantity'] ?? 1,
-            ];
-        }, $data['metadata']['items'] ?? []);
-
         if (!isset($data['items'])) {
             unset($data['metadata']['items']);
         }
@@ -237,7 +226,7 @@ class PayStack implements BillingProvider
                     'email' => $data['customer'] ?? null,
                     'amount' => $data['amount'],
                     'metadata' => $data['metadata'] ?? [],
-                    'url' => $data['url'] ?? (request()->getUrl() . $this->config['urls']['success']) ?? null,
+                    'callback_url' => $data['url'] ?? (request()->getUrl() . $this->config['urls']['success']) ?? null,
                 ], $data['_paystack'] ?? [])
             )
         );
