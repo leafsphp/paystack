@@ -391,21 +391,18 @@ class PayStack implements BillingProvider
      */
     public function webhook(): Event
     {
-        try {
-            $event = \Stripe\Webhook::constructEvent(
-                @file_get_contents('php://input'),
-                $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '',
-                $this->config['connection']['secrets.webhook'] ?? null
-            );
-        } catch (\Throwable $th) {
-            response()->exit($th, 400);
+        if ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', @file_get_contents('php://input'), $this->config['connection']['secrets.webhook'] ?? null)) {
+            return response()->exit('Invalid signature', 400);
         }
 
+        $event = request()->body();
+
         return new Event([
-            'type' => $event['type'],
+            'type' => $event['event'],
             'data' => $event['data'],
-            'id' => $event['id'],
-            'created' => $event['created'],
+            'id' => $event['id'] ?? null,
+            'created' => $event['data']['created_at'] ?? null,
+            'customer' => $event['data']['customer'] ?? null,
         ]);
     }
 
