@@ -21,6 +21,8 @@ class Transaction
     public $metadata;
     public $subscription;
 
+    public $data;
+
     public function __construct(array $transaction)
     {
         $this->url = $transaction['authorization_url'] ?? null;
@@ -35,6 +37,7 @@ class Transaction
 
         $this->status === 'success' ? $this->status = 'paid' : $this->status;
         $this->payment_status = $this->status;
+        $this->data = $transaction;
     }
 
     public function toArray()
