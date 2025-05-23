@@ -2,14 +2,14 @@
 
 namespace Leaf\Billing;
 
-use Leaf\Billing\PayStack\Provider;
+use Leaf\Billing\Paystack\Provider;
 
 /**
  * Leaf Billing PayStack
  * -----------
  * PayStack provider for Leaf Billing
  */
-class PayStack implements BillingProvider
+class Paystack implements BillingProvider
 {
     /**
      * Config for billing

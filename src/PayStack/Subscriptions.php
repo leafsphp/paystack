@@ -1,6 +1,6 @@
 <?php
 
-namespace Leaf\Billing\PayStack;
+namespace Leaf\Billing\Paystack;
 
 /**
  * PayStack Subscriptions
