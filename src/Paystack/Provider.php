@@ -65,4 +65,67 @@ class Provider
     {
         return new Transactions($this->client);
     }
+
+    /**
+     * Return paystack accepted banks
+     */
+    public function getAvailableBanks($options = [])
+    {
+        $queryOptions = http_build_query($options);
+        $queryOptions = str_replace(['%5B', '%5D'], ['[', ']'], $queryOptions);
+
+        $response = $this->client->get("/bank?$queryOptions");
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception('Failed to fetch banks from PayStack');
+        }
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        if (isset($data['data'])) {
+            return $data['data'];
+        }
+
+        return [];
+    }
+
+    /**
+     * Return all accepted countries
+     */
+    public function getAvailableCountries($options = [])
+    {
+        $response = $this->client->get('/country');
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception('Failed to fetch countries from PayStack');
+        }
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        if (isset($data['data'])) {
+            return $data['data'];
+        }
+
+        return [];
+    }
+
+    /**
+     * Return paystack accepted regions/states
+     */
+    public function getAvailableRegions($country)
+    {
+        $response = $this->client->get("/address_verification/states?country=$country");
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception('Failed to fetch states from PayStack');
+        }
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        if (isset($data['data'])) {
+            return $data['data'];
+        }
+
+        return [];
+    }
 }
