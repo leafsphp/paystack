@@ -67,6 +67,14 @@ class Provider
     }
 
     /**
+     * Return paystack subaccounts instance
+     */
+    public function subaccounts()
+    {
+        return new Subaccounts($this->client);
+    }
+
+    /**
      * Return paystack accepted banks
      */
     public function getAvailableBanks($options = [])
